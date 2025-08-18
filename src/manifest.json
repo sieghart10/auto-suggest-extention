@@ -17,22 +17,22 @@
     "content_scripts": [
         {
         "matches": ["<all_urls>"],
-        "js": ["src/scripts/content.js"],
-        "css": ["src/assets/css/content.css"],
+        "js": ["scripts/content.js"],
+        "css": ["assets/css/content.css"],
         "run_at": "document_idle"
         }
     ],
 
     "action": {
-        "default_popup": "src/html/popup.html",
+        "default_popup": "html/popup.html",
         "default_title": "Auto Suggest Assistant"
     },
 
     "web_accessible_resources": [
         {
         "resources": [
-            "src/assets/css/*.css",
-            "src/icons/*"
+            "assets/css/*.css",
+            "icons/*"
         ],
         "matches": ["<all_urls>"]
         }
