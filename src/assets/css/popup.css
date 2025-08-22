@@ -2,10 +2,15 @@ body {
     font-family: "Segoe UI", Tahoma, sans-serif;
     margin: 0;
     padding: 0;
-    width: 320px;
+    width: 350px;
     background:#BDF4EC;
     border-radius: 10px;
     overflow: hidden;
+    }
+
+    .logo {
+      width: 30px;
+      height: auto;  
     }
 
     header {
@@ -14,6 +19,10 @@ body {
       font-size: 20px;
       font-weight: bold;
       border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;   /* vertically align logo + text */
+      gap: 10px;             /* space between logo and text */
+  
     }
 
     main {
@@ -21,7 +30,7 @@ body {
     }
 
     .current-site {
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       padding: 8px 12px;
       color: #000;
       background: #f4fffd;
@@ -34,7 +43,7 @@ body {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       padding: 12px;
       background: #f4fffd;;
       border-radius: 8px;
@@ -68,6 +77,7 @@ body {
     .form-label{
         padding: 10px;
         margin: 0;
+        font-weight:500;
     }
 
     .radio-buttons {
@@ -79,8 +89,13 @@ body {
       padding: 5px;
       gap: 10px;         
       align-items: center; 
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       box-shadow: 0 2px 6px rgba(24, 174, 142, 0.376);
+    }
+
+    label input[type="radio"] {
+      vertical-align:sub; 
+      margin-right: 5px; 
     }
 
     .show-grams{
@@ -90,7 +105,37 @@ body {
       background: #f4fffd;
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(24, 174, 142, 0.376);
-      margin-bottom:16px;
+      margin-bottom:14px;
+    }
+    .grams-checkbox {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px; 
+    }
+
+    .grams-checkbox label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .grams-checkbox input[type="checkbox"] {
+      transform: scale(1.1);
+    }
+
+    .show-grams p{
+      font-weight:500;
+      font-size: 13px;
+
+    }
+
+    .show-grams p em{
+      font-weight:normal;
+      font-size: 11px;
+
 
     }
 
@@ -99,7 +144,7 @@ body {
       border-radius: 10px;
       background:#f4fffd;
       box-shadow: 0 2px 6px rgba(24, 174, 142, 0.376);
-      margin-bottom:16px;
+      margin-bottom:14px;
     }
     
     .model-item {
@@ -108,6 +153,8 @@ body {
     
     .model-label {
       color: #000;
+      font-weight:500;
+
     }
     
     .model-value {
@@ -117,26 +164,33 @@ body {
     }
 
     .no-suggestions{
-      font-size: 11px;
+      font-size: 13px;
       color: #000000;
       padding: 10px;
       background: #f4fffd;
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(24, 174, 142, 0.376);
+      font-weight:500;
+
     }
 
+
     .input-box{
-      border: 1px #00dadad0 solid;
-      border-radius: 5px;
+      
+      border: 1px solid #30dfc5d0;
+      border-radius: 6px; 
       margin-left: 10px;
-      width:65%;
+      width: 60%;
+      padding: 3px;
+      padding-left: 10px;
+      background:hsla(167, 65%, 90%, 0.937);
     }
 
     footer {
       opacity: 0.8;
       text-align: center;
       padding: 15px;
-      margin-top: 16px;
+      margin-top: 10x;
       background: #3dd0b2;
 
 
