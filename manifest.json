@@ -1,0 +1,38 @@
+{
+    "manifest_version": 3,
+    "name": "Auto Suggest Assistant",
+    "version": "1.0",
+    "description": "A universal writing assistant that appears whenever you type in any textbox element, using n-gram algorithm to generate next possible words.",
+    "permissions": [
+        "activeTab",
+        "storage",
+        "scripting",
+        "tabs"
+    ],
+    "host_permissions": [
+        "http://localhost:8000/*",
+        "http://127.0.0.1:8000/*"
+    ],
+    "content_scripts": [{
+        "matches": ["<all_urls>"],
+        "js": ["extension/scripts/content.js"],
+        "run_at": "document_idle"
+    }],
+    "background": {
+        "service_worker": "extension/scripts/background.js"
+    },
+    "action": {
+        "default_popup": "extension/html/popup.html",
+        "default_title": "Auto Suggest Assistant"
+    },
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "extension/styles/*.css",
+                "extension/scripts/*",
+                "extension/icons/*"
+            ],
+            "matches": ["<all_urls>"]
+        }
+    ]
+}
