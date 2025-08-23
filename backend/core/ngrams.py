@@ -41,7 +41,6 @@ class NgramModel:
             #     self.train()
     
     def load_from_dict(self, model_data: Dict):
-        """Load model from dictionary structure"""
         if 'trigrams' in model_data:
             # Convert defaultdict structure
             self.trigrams = defaultdict(Counter)
@@ -87,16 +86,18 @@ class NgramModel:
         print(f'Total tokens: {self.total_tokens}')
     
     def normalize(self, text: str) -> str:
-        return re.sub(r'[^\w\s]', '', text.lower()).strip()
+        text = text.lower().strip()
+        text = re.sub(r"[^\w\s']|'(?![a-z])|(?<![a-z])'", '', text)
+        text = re.sub(r"\s+'\s+|^'\s+|\s+'$", ' ', text)
+        
+        return text
     
     def tokenize(self, text: str, special_tokens: bool = True) -> List[str]:
         if not text.strip():
             return []
-        
-        # Split on whitespace and various punctuation
-        tokens = re.split(r'[\s—\-\']+', text)
-        tokens = [self.normalize(t) for t in tokens if t.strip()]
-        tokens = [t for t in tokens if t]  # Remove empty tokens
+        normalized_text = self.normalize(text)
+        tokens = normalized_text.split()
+        tokens = [t for t in tokens if t]
         
         if special_tokens:
             return ['<s>'] + tokens + ['</s>']

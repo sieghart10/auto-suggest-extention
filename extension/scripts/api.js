@@ -82,15 +82,6 @@ class API {
         }
     }
 
-    async healthCheck() {
-        try {
-            const data = await this.call('/health');
-            return data;
-        } catch (error) {
-            throw new Error(`Health check failed: ${error.message}`);
-        }
-    }
-
     async getAvailableModels() {
         try {
             console.log('Fetching available models...');
@@ -103,14 +94,33 @@ class API {
         }
     }
 
+    async getCacheStatus() {
+        try {
+            console.log('Fetching cache status...');
+            const data = await this.call('/models/cache');
+            console.log('Cache status response:', data);
+            return data;
+        } catch (error) {
+            console.error('getCacheStatus error:', error.message);
+            throw new Error(`Failed to fetch cache status: ${error.message}`);
+        }
+    }
+
     async switchModel(modelName) {
         try {
+            const cacheStatus = await this.getCacheStatus();
+            const isModelCached = cacheStatus.cached_models && cacheStatus.cached_models[modelName];
+            
+            console.log(`Switching to ${modelName} model (${isModelCached ? 'cached' : 'loading from disk'})`);
+            
             const data = await this.call('/models/switch', {
                 method: 'POST',
                 body: JSON.stringify({
                     model_name: modelName
                 })
             });
+            
+            console.log(`Model switch result: ${data.message}`);
             return data;
         } catch (error) {
             throw new Error(`Model switch failed: ${error.message}`);

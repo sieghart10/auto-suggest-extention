@@ -1,8 +1,14 @@
 {
     "manifest_version": 3,
-    "name": "Auto Suggest Assistant",
+    "name": "TypeCast",
     "version": "1.0",
-    "description": "A universal writing assistant that appears whenever you type in any textbox element, using n-gram algorithm to generate next possible words.",
+    "description": " Suggest and predict word powered by n-grams. Make your typing and writing faster and accuracy anywhere.",
+    "author": "Izyne Gallardo & Eleina Sta. Ana",
+    "icons":{
+        "16": "extension/icons/typecast.png",
+        "48": "extension/icons/typecast.png",
+        "128": "extension/icons/typecast.png"
+    },
     "permissions": [
         "activeTab",
         "storage",
@@ -23,7 +29,12 @@
     },
     "action": {
         "default_popup": "extension/html/popup.html",
-        "default_title": "Auto Suggest Assistant"
+        "default_title": "Auto Suggest Assistant",
+        "default_icon": {
+            "16": "extension/icons/typecast.png",
+            "48": "extension/icons/typecast.png",
+            "128": "extension/icons/typecast.png"
+        }
     },
     "web_accessible_resources": [
         {

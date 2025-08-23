@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Vanilla Extension</title>
+  <title>TypeCast</title>
   <meta charset="UTF-8">
   <script type="module" src="../scripts/popup.js" defer></script>
   <link rel="stylesheet" href="../styles/popup.css">
 </head>
 <body>
-  <header>NextWord</header>
+  <header>
+    <img src="../icons/typecast.png" alt="Logo" alt="Logo" class="logo style="vertical-align: middle;">
+    TypeCast
+  </header>
   <main class="main-popup">
     <div class="current-site">
       <div class="site-label">Active on</div>
@@ -28,11 +31,13 @@
     </form>
 
     <div class="show-grams">
-      <h3>NextWord will work on:</h2>
-      <label><input  type="checkbox" id="postBox" checked> Post input box</label>
-      <label><input type="checkbox" id="searchBar" checked> Search bar</label>
-      <label><input type="checkbox" id="commentBox" checked> Comment box</label>
-      <label><input type="checkbox" id="chatBox" checked> Chat box</label>
+      <p>TypeCast will work on:</p>
+      <div class="grams-checkbox">
+          <label><input  type="checkbox" id="postBox" checked> Post input box</label>
+          <label><input type="checkbox" id="searchBar" checked> Search bar</label>
+          <label><input type="checkbox" id="commentBox" checked> Comment box</label>
+          <label><input type="checkbox" id="chatBox" checked> Chat box</label>
+      </div>
       <p><em>Your settings are saved automatically.</em></p>
     </div>
 

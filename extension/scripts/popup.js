@@ -91,72 +91,152 @@ function updateSettingsUI(settings) {
   }
 }
 
-function setupEventListeners() {
-  const toggleBtn = document.getElementById('toggle-btn');
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', async function () {
-      try {
-        const result = await sendApiMessage({ action: 'toggleExtension' });
-        console.log('Toggle result:', result);
-
-        const statusText = document.getElementById('status-text');
-
-        if (result.enabled) {
-          statusText.textContent = 'Active';
-          this.textContent = 'Disable';
-          this.classList.remove('disabled');
-        } else {
-          statusText.textContent = 'Disabled';
-          this.textContent = 'Enable';
-          this.classList.add('disabled');
+const LoadingState = {
+    isLoading: false,
+    
+    show(message = 'Loading...') {
+        this.isLoading = true;
+        const existingLoader = document.getElementById('loading-indicator');
+        if (existingLoader) existingLoader.remove();
+        
+        const loader = document.createElement('div');
+        loader.id = 'loading-indicator';
+        loader.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            font-size: 14px;
+            text-align: center;
+        `;
+        
+        loader.innerHTML = `
+            <div style="margin-bottom: 10px;">
+                <div style="width: 20px; height: 20px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+            </div>
+            <div>${message}</div>
+        `;
+        
+        // Add CSS animation
+        if (!document.getElementById('loading-styles')) {
+            const style = document.createElement('style');
+            style.id = 'loading-styles';
+            style.textContent = `
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
         }
-      } catch (error) {
-        console.error('Error toggling extension:', error);
-      }
-    });
-  }
-
-  const modelRadios = document.querySelectorAll('form.radio-buttons input[name="word"]');
-  modelRadios.forEach(radio => {
-    radio.addEventListener('change', async function () {
-      if (this.checked) {
-        try {
-          const result = await sendApiMessage({
-            action: 'switchModel',
-            model: this.value
-          });
-          console.log('Model switched:', result);
-        } catch (error) {
-          console.error('Error switching model:', error);
-        }
-      }
-    });
-  });
-
-  ['postBox', 'searchBar', 'commentBox', 'chatBox'].forEach(id => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.addEventListener('change', async function () {
-        await updateServerSettings();
-      });
+        
+        document.body.appendChild(loader);
+    },
+    
+    hide() {
+        this.isLoading = false;
+        const loader = document.getElementById('loading-indicator');
+        if (loader) loader.remove();
     }
-  });
+};
 
-  const methodRadios = document.querySelectorAll('div.model-type input[type="radio"]');
-  methodRadios.forEach(radio => {
-    radio.addEventListener('change', async function () {
-      if (this.checked) {
-        await updateServerSettings();
-      }
-    });
-  });
+// Update the model radio event listeners
+function setupEventListeners() {
+    const toggleBtn = document.getElementById('toggle-btn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', async function () {
+            try {
+                const result = await sendApiMessage({ action: 'toggleExtension' });
+                console.log('Toggle result:', result);
 
-  const suggestionsInput = document.querySelector('.input-box[type="number"]');
-  if (suggestionsInput) {
-    suggestionsInput.addEventListener('change', async function () {
-      await updateServerSettings();
+                const statusText = document.getElementById('status-text');
+
+                if (result.enabled) {
+                    statusText.textContent = 'Active';
+                    this.textContent = 'Disable';
+                    this.classList.remove('disabled');
+                } else {
+                    statusText.textContent = 'Disabled';
+                    this.textContent = 'Enable';
+                    this.classList.add('disabled');
+                }
+            } catch (error) {
+                console.error('Error toggling extension:', error);
+            }
+        });
+    }
+
+    const modelRadios = document.querySelectorAll('form.radio-buttons input[name="word"]');
+    modelRadios.forEach(radio => {
+        radio.addEventListener('change', async function () {
+            if (this.checked && !LoadingState.isLoading) {
+                try {
+                    LoadingState.show(`Switching to ${this.value} model...`);
+                    
+                    modelRadios.forEach(r => r.disabled = true);
+                    
+                    const cacheResult = await sendApiMessage({ action: 'getCacheStatus' });
+                    const isModelCached = cacheResult.cached_models && cacheResult.cached_models[this.value];
+                    
+                    if (isModelCached) {
+                        LoadingState.show(`Loading ${this.value} model from cache...`);
+                    } else {
+                        LoadingState.show(`Loading ${this.value} model from disk (may take a moment)...`);
+                    }
+                    
+                    const result = await sendApiMessage({
+                        action: 'switchModel',
+                        model: this.value
+                    });
+                    console.log('Model switched:', result);
+                    
+                    LoadingState.show(`✓ Switched to ${this.value} model`);
+                    setTimeout(() => LoadingState.hide(), 1000);
+                    
+                    await updateServerSettings();
+                    
+                } catch (error) {
+                    console.error('Error switching model:', error);
+                    LoadingState.show(`✗ Failed to switch model: ${error.message}`);
+                    setTimeout(() => LoadingState.hide(), 3000);
+                    
+                    this.checked = false;
+                } finally {
+                    modelRadios.forEach(r => r.disabled = false);
+                }
+            }
+        });
     });
-  }
+
+    ['postBox', 'searchBar', 'commentBox', 'chatBox'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('change', async function () {
+                await updateServerSettings();
+            });
+        }
+    });
+
+    const methodRadios = document.querySelectorAll('div.model-type input[type="radio"]');
+    methodRadios.forEach(radio => {
+        radio.addEventListener('change', async function () {
+            if (this.checked) {
+                await updateServerSettings();
+            }
+        });
+    });
+
+    const suggestionsInput = document.querySelector('.input-box[type="number"]');
+    if (suggestionsInput) {
+        suggestionsInput.addEventListener('change', async function () {
+            await updateServerSettings();
+        });
+    }
 }
 
 async function updateServerSettings() {
@@ -185,14 +265,23 @@ async function updateServerSettings() {
       }
     });
 
+    const modelRadios = document.querySelectorAll('form.radio-buttons input[name="word"]');
+    modelRadios.forEach(radio => {
+      if (radio.checked) {
+        settings.active_model = radio.value;
+      }
+    });
+
+    console.log('Settings being sent to server:', settings);
+
     const result = await sendApiMessage({ action: "updateSettings", settings });
     console.log("Settings updated:", result);
-    // tell content script(s) to update behavior
+    
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab && tab.id) {
+      console.log('Sending settings to content script:', settings);
       chrome.tabs.sendMessage(tab.id, { action: "settingsChanged", settings });
-    }
-  } catch (error) {
+    }} catch (error) {
     console.error('Error updating settings:', error);
   }
 }
@@ -260,15 +349,15 @@ function updateConnectionStatus(online, error = null) {
 }
 
 function sendApiMessage(msg) {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(msg, (response) => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-      } else if (!response.success) {
-        reject(new Error(response.error));
-      } else {
-        resolve(response.data);
-      }
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(msg, (response) => {
+            if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+            } else if (!response.success) {
+                reject(new Error(response.error));
+            } else {
+                resolve(response.data);
+            }
+        });
     });
-  });
 }

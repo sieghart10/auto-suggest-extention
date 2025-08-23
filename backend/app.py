@@ -1,4 +1,6 @@
 import uvicorn
+import threading
+from typing import Dict
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -8,6 +10,8 @@ from typing import Optional
 from datetime import datetime, timezone
 
 ngram_model = None
+model_cache: Dict[str, NgramModel] = {}
+cache_lock = threading.Lock()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,6 +23,9 @@ async def lifespan(app: FastAPI):
             print("ERROR: Failed to load model. Please ensure all.pkl exists in trained_models/")
             raise RuntimeError("Model loading failed")
         print("✓ Model loaded successfully")
+        
+        await preload_models()
+        
     except Exception as e:
         print(f"ERROR loading model: {e}")
         raise RuntimeError(f"Failed to load model: {e}")
@@ -88,6 +95,32 @@ async def get_available_models():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+async def preload_models():
+    global model_cache
+    
+    model_mapping = {
+        "all": "all.pkl",
+        "casual": "cas-en.pkl", 
+        "formal": "std-en.pkl",
+        "poetic": "poet-en.pkl"
+    }
+    
+    print("Preloading models...")
+    for model_name, filename in model_mapping.items():
+        try:
+            with cache_lock:
+                if model_name not in model_cache:
+                    model = NgramModel.load_model(filename)
+                    if model:
+                        model_cache[model_name] = model
+                        print(f"✓ Preloaded {model_name} model")
+                    else:
+                        print(f"✗ Failed to preload {model_name} model")
+        except Exception as e:
+            print(f"✗ Error preloading {model_name}: {e}")
+    
+    print(f"Preloaded {len(model_cache)} models")
 
 @app.post("/models/switch")
 async def switch_model(request: ModelSwitchRequest):
@@ -107,6 +140,21 @@ async def switch_model(request: ModelSwitchRequest):
                 detail=f"Invalid model name. Available models: {list(model_mapping.keys())}"
             )
         
+        with cache_lock:
+            if request.model_name in model_cache:
+                ngram_model = model_cache[request.model_name]
+                user_settings["active_model"] = request.model_name
+                
+                return {
+                    "message": f"Successfully switched to {request.model_name} model (from cache)",
+                    "model_info": {
+                        "vocab_size": ngram_model.vocab_size,
+                        "total_tokens": ngram_model.total_tokens,
+                        "model_name": request.model_name,
+                        "cached": True
+                    }
+                }
+        
         filename = model_mapping[request.model_name]
         new_model = NgramModel.load_model(filename)
         
@@ -116,6 +164,9 @@ async def switch_model(request: ModelSwitchRequest):
                 detail=f"Model file {filename} not found"
             )
         
+        with cache_lock:
+            model_cache[request.model_name] = new_model
+        
         ngram_model = new_model
         user_settings["active_model"] = request.model_name
         
@@ -124,7 +175,8 @@ async def switch_model(request: ModelSwitchRequest):
             "model_info": {
                 "vocab_size": ngram_model.vocab_size,
                 "total_tokens": ngram_model.total_tokens,
-                "model_name": request.model_name
+                "model_name": request.model_name,
+                "cached": False
             }
         }
         
@@ -132,6 +184,26 @@ async def switch_model(request: ModelSwitchRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Model switch failed: {str(e)}")
+    
+@app.get("/models/cache")
+async def get_cache_status():
+    try:
+        cache_info = {}
+        with cache_lock:
+            for model_name, model in model_cache.items():
+                cache_info[model_name] = {
+                    "vocab_size": model.vocab_size,
+                    "total_tokens": model.total_tokens,
+                    "is_trained": model.is_trained
+                }
+        
+        return {
+            "cached_models": cache_info,
+            "total_cached": len(cache_info),
+            "current_model": user_settings.get("active_model", "unknown")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/settings")
 async def get_settings():

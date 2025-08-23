@@ -23,6 +23,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case "switchModel":
           result = await api.switchModel(message.model);
           break;
+        case "getCacheStatus":
+            result = await api.getCacheStatus();
+            break;
+        case "switchModelOptimized":
+            result = await api.switchModelOptimized(message.model);
+            break;
         case "predict":
           result = await api.predict(message.text, message.topK, message.method);
           break;
